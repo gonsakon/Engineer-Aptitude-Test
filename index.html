@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>問卷調查</title>
+    <!-- 引入 Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+</head>
+<style>
+    #myChart {
+        width: 70% !important;
+        height: 70% !important;
+    }
+
+    #export-container {
+        background-color: #ffffff;
+
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+        padding: 50px;
+    }
+</style>
+
+<body>
+    <div class="container">
+        <img src="hero.png" alt="" style="max-width: 100%;">
+        <h1 class="p-2">軟體王國英雄測驗 <br>尋找你的工程師 DNA</h1>
+        <div class="alert alert-primary p-2">總計 25 道單選，測驗完後，請輸出圖片與六角導師進行交流</div>
+        <div id="question-container" class="mt-3">
+            <!-- 問題將在這裡動態生成 -->
+        </div>
+        <div id="export-container">
+            <canvas id="myChart" width="300" height="300"></canvas>
+            <h3>一週可運用的時間為 <span></span></h3>
+        </div>
+        <div class="text-center mb-5"><button id="export" class="btn btn-primary">輸出測驗結果</button></div>
+
+        <div id="output"></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 引入 Bootstrap 5 JS 和 Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
+    <script>
+        // 載入雷達圖
+        const chartData = {
+            labels: [],
+            datasets: [{
+                label: '工程師適性測驗',
+                data: [],
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        };
+
+
+
+        // 使用 fetch API 讀取 question.json
+
+        fetch('question.json')
+            .then(response => response.json())
+            .then(data => {
+                const questionContainer = document.getElementById('question-container');
+                data.forEach((section, sectionIndex) => {
+                    const sectionElement = document.createElement('div');
+                    sectionElement.className = 'mb-3';
+                    const sectionTitle = document.createElement('h2');
+                    sectionTitle.textContent = section.name;
+                    sectionElement.appendChild(sectionTitle);
+                    section.questions.forEach((question, questionIndex) => {
+                        const questionElement = document.createElement('p');
+                        questionElement.textContent = `${questionIndex + 1}. ${question.text}`;
+                        sectionElement.appendChild(questionElement);
+                        const optionsContainer = document.createElement('div');
+                        question.options.forEach((option, index) => {
+                            const optionContainer = document.createElement('div');
+                            optionContainer.className = 'form-check';
+                            const optionElement = document.createElement('input');
+                            optionElement.className = 'form-check-input';
+                            optionElement.type = 'radio';
+                            optionElement.name = `question-${section.name}-${questionIndex}`;
+                            optionElement.id = `option-${section.name}-${questionIndex}-${index}`;
+                            optionElement.value = question.scores[index];
+                            optionContainer.appendChild(optionElement);
+                            const labelElement = document.createElement('label');
+                            labelElement.className = 'form-check-label';
+                            labelElement.htmlFor = optionElement.id;
+                            labelElement.textContent = option;
+                            optionContainer.appendChild(labelElement);
+                            optionsContainer.appendChild(optionContainer);
+                            optionElement.addEventListener('change', () => {
+                                chartData.datasets[0].data[sectionIndex] += question.scores[index];
+                                myChart.update();
+
+                                // 如果這是第一題，則更新 <h3> 標籤的內容
+                                if (sectionIndex === 0 && questionIndex === 0) {
+                                    document.querySelector('h3 span').textContent = option;
+                                }
+                            });
+                        });
+                        sectionElement.appendChild(optionsContainer);
+                    });
+                    questionContainer.appendChild(sectionElement);
+                });
+
+                // 雷達圖顯示
+                data.forEach((section, sectionIndex) => {
+                    chartData.labels.push(section.name);
+                    chartData.datasets[0].data.push(0);
+                });
+
+                const ctx = document.getElementById('myChart').getContext('2d');
+                const myChart = new Chart(ctx, {
+                    type: 'radar',
+                    data: chartData,
+                    options: {
+                        scales: {
+                            r: {
+                                suggestedMin: 0,
+                                suggestedMax: 25
+                            }
+                        }
+                    }, plugins: {
+                        legend: {
+                            labels: {
+                                // Change the font size here
+                                font: {
+                                    size: 100
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+
+        document.getElementById('export').addEventListener('click', function () {
+            html2canvas(document.querySelector("#export-container")).then(canvas => {
+                // 將 canvas 轉換為圖片 URL
+                var imgURL = canvas.toDataURL("image/png");
+
+                // 創建一個新的 a 元素
+                var dlLink = document.createElement('a');
+                dlLink.download = 'image.png'; // 下載後的文件名
+                dlLink.href = imgURL;
+                dlLink.dataset.downloadurl = ["image/png", dlLink.download, dlLink.href].join(':');
+
+                // 模擬點擊操作以開始下載
+                dlLink.click();
+            });
+        });
+    </script>
+</body>
+
+</html>
