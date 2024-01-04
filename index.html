@@ -25,6 +25,11 @@
         align-items: center;
         padding: 10px;
     }
+
+    p {
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
 </style>
 
 <body>
@@ -70,15 +75,14 @@
             .then(response => response.json())
             .then(data => {
                 const questionContainer = document.getElementById('question-container');
+                let questionNumber = 1;
                 data.forEach((section, sectionIndex) => {
                     const sectionElement = document.createElement('div');
                     sectionElement.className = 'mb-3';
-                    const sectionTitle = document.createElement('h2');
-                    sectionTitle.textContent = section.name;
-                    sectionElement.appendChild(sectionTitle);
                     section.questions.forEach((question, questionIndex) => {
                         const questionElement = document.createElement('p');
-                        questionElement.textContent = `${questionIndex + 1}. ${question.text}`;
+                        questionElement.textContent = `${questionNumber}. ${question.text}`;
+                        questionNumber++;
                         sectionElement.appendChild(questionElement);
                         const optionsContainer = document.createElement('div');
                         question.options.forEach((option, index) => {
