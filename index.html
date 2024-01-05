@@ -69,6 +69,13 @@
 
 
 
+        const resultArr = [
+          [0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0],
+        ]
         // 使用 fetch API 讀取 question.json
 
         fetch('question.json')
@@ -102,7 +109,8 @@
                             optionContainer.appendChild(labelElement);
                             optionsContainer.appendChild(optionContainer);
                             optionElement.addEventListener('change', () => {
-                                chartData.datasets[0].data[sectionIndex] += question.scores[index];
+                                resultArr[sectionIndex][questionIndex] = question.scores[index];
+                                chartData.datasets[0].data[sectionIndex] = resultArr[sectionIndex].reduce((pre, cur) => pre + cur, 0)
                                 myChart.update();
 
                                 // 如果這是第一題，則更新 <h3> 標籤的內容
