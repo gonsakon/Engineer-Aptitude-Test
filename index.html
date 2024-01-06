@@ -46,7 +46,7 @@
         </div>
         <!-- <div class="text-center mb-5"><button id="export" class="btn btn-primary">輸出測驗結果</button></div> -->
         <div class="alert alert-primary p-2">恭喜完成測驗，請將結果截圖，並與教練進行職涯討論 (*‘ v`*)</div>
-        <div id="output"></div>
+        <div id="export" class="btn btn-primary mb-2">點我下載雷達圖</div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- 引入 Bootstrap 5 JS 和 Popper.js -->
@@ -69,6 +69,13 @@
 
 
 
+        const resultArr = [
+          [0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0],
+        ]
         // 使用 fetch API 讀取 question.json
 
         fetch('question.json')
@@ -102,7 +109,8 @@
                             optionContainer.appendChild(labelElement);
                             optionsContainer.appendChild(optionContainer);
                             optionElement.addEventListener('change', () => {
-                                chartData.datasets[0].data[sectionIndex] += question.scores[index];
+                                resultArr[sectionIndex][questionIndex] = question.scores[index];
+                                chartData.datasets[0].data[sectionIndex] = resultArr[sectionIndex].reduce((pre, cur) => pre + cur, 0)
                                 myChart.update();
 
                                 // 如果這是第一題，則更新 <h3> 標籤的內容
